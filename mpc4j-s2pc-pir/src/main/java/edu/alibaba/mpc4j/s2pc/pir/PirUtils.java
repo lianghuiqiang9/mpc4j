@@ -227,7 +227,7 @@ public class PirUtils {
         if (serverInputFile.exists()) {
             return;
         }
-        LOGGER.info("Lost some / all files, generate byte[] set files.");
+        LOGGER.info("Lost some / all files, generate byte[***] set files.");
         if (serverInputFile.exists()) {
             LOGGER.info("Delete server byte[] set file.");
             Preconditions.checkArgument(

@@ -38,7 +38,8 @@ public class PirMain {
             case SingleKsPirMain.PTO_TYPE_NAME:
                 SingleKsPirMain singleKsPirMain = new SingleKsPirMain(properties, ownName);
                 singleKsPirMain.runNetty();
-            case StdKwPirMain.PTO_NAME_KEY:
+                break;
+            case StdKwPirMain.PTO_TYPE_NAME:
                 StdKwPirMain stdKwPirMain = new StdKwPirMain(properties, ownName);
                 stdKwPirMain.runNetty();
                 break;

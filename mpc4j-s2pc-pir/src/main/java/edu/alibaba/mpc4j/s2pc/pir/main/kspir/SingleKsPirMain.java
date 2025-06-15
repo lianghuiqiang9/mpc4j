@@ -96,7 +96,7 @@ public class SingleKsPirMain extends AbstractMainTwoPartyPto {
 
     @Override
     public void runParty1(Rpc serverRpc, Party clientParty) throws IOException, MpcAbortException {
-        LOGGER.info("{} generate warm-up element files", serverRpc.ownParty().getPartyName());
+        LOGGER.info("{} generate warm-up element files*1", serverRpc.ownParty().getPartyName());
         PirUtils.generateBytesInputFiles(WARMUP_SERVER_SET_SIZE, WARMUP_ELEMENT_BIT_LENGTH);
         LOGGER.info("{} generate element files", serverRpc.ownParty().getPartyName());
         for (int i = 0 ; i < serverSetSizeNum; i++) {
@@ -240,7 +240,7 @@ public class SingleKsPirMain extends AbstractMainTwoPartyPto {
 
     @Override
     public void runParty2(Rpc clientRpc, Party serverParty) throws IOException, MpcAbortException {
-        LOGGER.info("{} generate warm-up element files", clientRpc.ownParty().getPartyName());
+        LOGGER.info("{} generate warm-up element files*2", clientRpc.ownParty().getPartyName());
         PirUtils.generateIndexInputFiles(WARMUP_SERVER_SET_SIZE, WARMUP_QUERY_NUM);
         LOGGER.info("{} generate element files", clientRpc.ownParty().getPartyName());
         for (int i = 0; i < serverSetSizeNum; i++) {
