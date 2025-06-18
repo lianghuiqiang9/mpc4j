@@ -15,11 +15,14 @@ import edu.alibaba.mpc4j.s2pc.pir.cppir.index.simple.SimpleCpIdxPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.simple.SimpleCpIdxPirServer;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.ks.AbstractCpKsPirServer;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.ks.HintCpKsPirServer;
+import edu.alibaba.mpc4j.s2pc.pir.cppir.ks.simple.SimpleNaiveCpKsPirDesc.PtoStep;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.poi.ss.formula.functions.T;
 
 import static edu.alibaba.mpc4j.s2pc.pir.cppir.ks.simple.SimpleNaiveCpKsPirDesc.PtoStep;
 import static edu.alibaba.mpc4j.s2pc.pir.cppir.ks.simple.SimpleNaiveCpKsPirDesc.*;
@@ -53,9 +56,13 @@ public class SimpleNaiveCpKsPirServer<T> extends AbstractCpKsPirServer<T> implem
         setInitInput(keyValueMap, l, matchBatchNum);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
+        //bff
         stopWatch.start();
         // concat Hash(key) and value
+        // fingerprint.size() = 8
         Hash hash = HashFactory.createInstance(envType, DIGEST_BYTE_L);
+
+        //将每一个key变成hash1(key),hash2(key),hash3(key)
         Map<T, byte[]> keyValueConcatMap = new HashMap<>();
         keyValueMap.keySet().forEach(key -> {
             byte[] digest = hash.digestToBytes(ObjectUtils.objectToByteArray(key));
@@ -64,6 +71,10 @@ public class SimpleNaiveCpKsPirServer<T> extends AbstractCpKsPirServer<T> implem
         Arity3ByteFuseFilter<T> fuseFilter = new Arity3ByteFuseFilter<>(
             envType, keyValueConcatMap, byteL + DIGEST_BYTE_L, secureRandom
         );
+
+        System.out.println("fuseFilter.filterLength(): " + fuseFilter.filterLength());
+
+
         arity = fuseFilter.arity();
         sendOtherPartyPayload(
             PtoStep.SERVER_SEND_FUSE_FILTER_SEED.ordinal(), Collections.singletonList(fuseFilter.seed())
@@ -73,6 +84,7 @@ public class SimpleNaiveCpKsPirServer<T> extends AbstractCpKsPirServer<T> implem
         stopWatch.reset();
         logStepInfo(PtoState.INIT_STEP, 1, 2, initFuseFilterTime, "Server generates fuse filter");
 
+        // hint DB*A
         stopWatch.start();
         simpleCpIdxPirServer.init(NaiveDatabase.create((byteL + DIGEST_BYTE_L) * Byte.SIZE, fuseFilter.storage()));
         stopWatch.stop();

@@ -43,7 +43,7 @@ class SingleCpKsPirConfigUtils {
             CpKsPirType.class, properties, SingleCpKsPirMain.PTO_NAME_KEY
         );
         return switch (cpKsPirType) {
-            case ALPR21 -> {
+            case ALPR21 -> { //这里就没有进入
                 CpIdxPirType cpIdxPirType = MainPtoConfigUtils.readEnum(
                     CpIdxPirType.class, properties, CpIdxPirMain.PTO_NAME_KEY
                 );
@@ -65,6 +65,7 @@ class SingleCpKsPirConfigUtils {
                     );
                 };
             }
+            // 只进入了这里
             case PAI_CKS -> new PaiCpCksPirConfig.Builder().build();
             case SIMPLE_NAIVE -> new SimpleNaiveCpKsPirConfig.Builder().build();
             case PGM_INDEX -> new SimplePgmCpKsPirConfig.Builder().build();

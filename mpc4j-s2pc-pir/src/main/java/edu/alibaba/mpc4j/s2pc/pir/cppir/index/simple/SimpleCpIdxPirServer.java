@@ -92,6 +92,8 @@ public class SimpleCpIdxPirServer extends AbstractCpIdxPirServer implements Hint
         IntMatrix matrixA = IntMatrix.createRandom(columns, dimension, seed);
         tdbs = new IntMatrix[partition];
         IntStream intStream = parallel ? IntStream.range(0, partition).parallel() : IntStream.range(0, partition);
+        
+        // hint[p] = dbs[p] * A
         IntMatrix[] hint = intStream.mapToObj(p -> dbs[p].mul(matrixA)).toArray(IntMatrix[]::new);
         // transpose database
         IntStream.range(0, partition).forEach(p -> {
@@ -136,6 +138,8 @@ public class SimpleCpIdxPirServer extends AbstractCpIdxPirServer implements Hint
         MpcAbortPreconditions.checkArgument(qu.getNum() == columns);
         // generate response
         IntStream pIntStream = parallel ? IntStream.range(0, tdbs.length).parallel() : IntStream.range(0, tdbs.length);
+        
+        //对于每个转置后的数据库矩阵 tdbs[p]，执行 qu 左乘，即 qu^T * tdbs[p] 得到响应向量
         List<byte[]> responsePayload = pIntStream
             .mapToObj(p -> tdbs[p].leftMul(qu))
             .map(ans -> IntUtils.intArrayToByteArray(ans.getElements()))

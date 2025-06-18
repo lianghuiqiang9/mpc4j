@@ -100,8 +100,13 @@ public class SingleCpKsPirMain extends AbstractMainTwoPartyPto {
     public void runParty1(Rpc serverRpc, Party clientParty) throws IOException, MpcAbortException {
         LOGGER.info("{} generate warm-up database file**1", serverRpc.ownParty().getPartyName());
         LOGGER.info("WARMUP_SERVER_SET_SIZE = {}, WARMUP_ELEMENT_BIT_LENGTH = {}", WARMUP_SERVER_SET_SIZE, WARMUP_ELEMENT_BIT_LENGTH);
+        //生成warm-up文件，这里是1024个16bits的数据
         PirUtils.generateBytesInputFiles(WARMUP_SERVER_SET_SIZE, WARMUP_ELEMENT_BIT_LENGTH);
         LOGGER.info("{} generate database file", serverRpc.ownParty().getPartyName());
+        
+        //按照conf, server生成2个文件
+        System.out.println("serverSetSizeNum: " + serverSetSizeNum + ", serverSetSizes: " + Arrays.toString(serverSetSizes));
+
         for (int i = 0 ; i < serverSetSizeNum; i++) {
             PirUtils.generateBytesInputFiles(serverSetSizes[i], entryBitLength);
         }
@@ -113,6 +118,8 @@ public class SingleCpKsPirMain extends AbstractMainTwoPartyPto {
             + "_" + serverRpc.ownParty().getPartyId()
             + "_" + ForkJoinPool.getCommonPoolParallelism()
             + ".output";
+
+        System.out.println("filePath = " + filePath);
         FileWriter fileWriter = new FileWriter(filePath);
         PrintWriter printWriter = new PrintWriter(fileWriter, true);
         String tab = "Party ID\tServer Set Size\tQuery Num\tIs Parallel\tThread Num"
@@ -120,12 +127,13 @@ public class SingleCpKsPirMain extends AbstractMainTwoPartyPto {
             + "\tPto  Time(ms)\tPto  DataPacket Num\tPto  Payload Bytes(B)\tPto  Send Bytes(B)";
         printWriter.println(tab);
         LOGGER.info("{} ready for run", serverRpc.ownParty().getPartyName());
-        System.out.println("Own Name: " + serverSetSizeNum); 
+        //System.out.println("Own Name: " + serverSetSizeNum); 
         serverRpc.connect();
+        System.out.println("Start ");
         int taskId = 0;
         warmupServer(serverRpc, clientParty, config, taskId);
         taskId++;
-        System.out.println("Own Name: " + serverSetSizeNum); 
+        //System.out.println("Own Name: " + serverSetSizeNum); 
         for (int i = 0; i < serverSetSizeNum; i++) {
             int serverSetSize = serverSetSizes[i];
             byte[][] entries = readServerDatabase(serverSetSize, entryBitLength);
@@ -155,6 +163,8 @@ public class SingleCpKsPirMain extends AbstractMainTwoPartyPto {
     private void warmupServer(Rpc serverRpc, Party clientParty, CpKsPirConfig config, int taskId)
         throws IOException, MpcAbortException {
         byte[][] entries = readServerDatabase(WARMUP_SERVER_SET_SIZE, WARMUP_ELEMENT_BIT_LENGTH);
+        
+        //构造key-value map
         Map<String, byte[]> keywordValueMap = IntStream.range(0, WARMUP_SERVER_SET_SIZE)
             .boxed()
             .collect(Collectors.toMap(
@@ -168,17 +178,21 @@ public class SingleCpKsPirMain extends AbstractMainTwoPartyPto {
             serverRpc.ownParty().getPartyName(), WARMUP_SERVER_SET_SIZE, WARMUP_ELEMENT_BIT_LENGTH, WARMUP_QUERY_NUM,
             false
         );
+        //创建 server
         CpKsPirServer<String> server = CpKsPirFactory.createServer(serverRpc, clientParty, config);
         server.setTaskId(taskId);
         server.setParallel(false);
+        //两次同步，准备初始化
         server.getRpc().synchronize();
         LOGGER.info("(warmup) {} init", server.ownParty().getPartyName());
         server.init(keywordValueMap, WARMUP_ELEMENT_BIT_LENGTH);
         server.getRpc().synchronize();
         LOGGER.info("(warmup) {} execute", server.ownParty().getPartyName());
+        //开始pir
         for (int i = 0; i < WARMUP_QUERY_NUM; i++) {
             server.pir();
         }
+        // 同步并清理
         server.getRpc().synchronize();
         server.getRpc().reset();
         server.destroy();
@@ -228,6 +242,10 @@ public class SingleCpKsPirMain extends AbstractMainTwoPartyPto {
         long ptoDataPacketNum = server.getRpc().getSendDataPacketNum();
         long ptoPayloadByteLength = server.getRpc().getPayloadByteLength();
         long ptoSendByteLength = server.getRpc().getSendByteLength();
+        // initTime 包括bff构建时间和A*DB的时间, 要减去一个
+        // initSendByteLength 是server发送给client的hint大小
+        // ptoTime 协议执行时间， 可以在日志中看到server 响应的时间
+        // ptoSendByteLength 是server发送给client的rep大小
         String info = server.ownParty().getPartyId()
             + "\t" + entries.length
             + "\t" + queryNum

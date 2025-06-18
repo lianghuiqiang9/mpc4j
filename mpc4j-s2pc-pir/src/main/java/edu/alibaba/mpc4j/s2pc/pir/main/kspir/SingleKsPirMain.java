@@ -91,7 +91,9 @@ public class SingleKsPirMain extends AbstractMainTwoPartyPto {
         queryNum = PropertiesUtils.readInt(properties, "query_num");
         // read PTO config
         LOGGER.info("{} read PTO config", ownRpc.ownParty().getPartyName());
+        System.out.println("find single_kw_pir_pto_name *1");
         config = SingleKsPirConfigUtils.createConfig(properties);
+        System.out.println("find single_kw_pir_pto_name *2");
     }
 
     @Override
