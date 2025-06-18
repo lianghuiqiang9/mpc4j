@@ -78,4 +78,6 @@ Pto  Send Bytes(B)
 
 lognumkeys	&query nums	&init hint times	&hint size	&query gen times	&query gen comm.	&	answer gen times	&	answer gen comm.	&	reconstruct times
 
-20    &  any    &  bff1428ms+hints13125ms   &   17264765B   &  & & 766ms  &  506820B   & 
+20    &  any    &  bff1428ms+hints13125ms   &   17264765B   &  & & 766ms/query num  &  506820B/query num   & 
+
+无需考虑了，就直接的运行吧，取平均值，这样是最好的方法，不用想那么多了。
